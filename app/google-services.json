@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "773432735099",
+    "project_id": "loginfirebase-6cab4",
+    "storage_bucket": "loginfirebase-6cab4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773432735099:android:cfc3d58f0c721f31ee79de",
+        "android_client_info": {
+          "package_name": "com.santiagoruiz.exploracolombiaapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXFprrTjhwZBqZaANr9iaS1n3aNxchUUw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

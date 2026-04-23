@@ -23,13 +23,22 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import com.santiagoruiz.exploracolombiaapp.ui.theme.ExploraColombiaAppTheme
 
 @Composable
 fun LoginScreen(
+    onClickRegister: () -> Unit = {},
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
+
+    val auth = Firebase.auth
+    // Estados
+    var inputEmail by remember { mutableStateOf("") }
+
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -185,7 +194,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Button(
-                    onClick = { onLoginSuccess() },
+                    onClick = { onLoginSuccess()},
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -212,6 +221,7 @@ fun LoginScreen(
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
+
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -246,13 +256,15 @@ fun LoginScreen(
 
             Row {
                 Text(text = "¿No tienes cuenta? ", color = Color.Gray, fontSize = 14.sp)
-                Text(
-                    text = "Regístrate",
-                    color = primaryOrange,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onNavigateToRegister() }
-                )
+                TextButton(onClick = {onClickRegister}) {
+                    Text(
+                        text = "Regístrate",
+                        color = primaryOrange,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onNavigateToRegister() }
+                    )
+                }
             }
         }
     }
