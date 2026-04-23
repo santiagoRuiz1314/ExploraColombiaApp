@@ -6,21 +6,42 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 @Composable
 fun NavigationApp(){
     val myNavController = rememberNavController()
+    val startDestination = if (Firebase.auth.currentUser != null) "home" else "login"
+
     NavHost(
         navController = myNavController,
-        startDestination = "login",
+        startDestination = startDestination,
         modifier = Modifier.fillMaxSize()
     ){
         composable(route = "login"){
-            LoginScreen(onLoginSuccess = {}, onNavigateToRegister = {myNavController.navigate("register")})
-
+            LoginScreen(
+                onLoginSuccess = {
+                    myNavController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onNavigateToRegister = { myNavController.navigate("register") }
+            )
         }
         composable(route = "register"){
-            RegisterScreen(onRegisterSuccess = {}, onNavigateToLogin = {myNavController.navigate("login")},  onBackClick = { myNavController.popBackStack() } )
+            RegisterScreen(
+                onRegisterSuccess = {
+                    myNavController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                onNavigateToLogin = { myNavController.navigate("login") },
+                onBackClick = { myNavController.popBackStack() }
+            )
+        }
+        composable(route = "home"){
+            HomeScreen()
         }
     }
 }
