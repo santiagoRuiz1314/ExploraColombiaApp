@@ -188,7 +188,7 @@ fun RegisterScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
-
+            //Validaciones secuenciale
             Button(
                 onClick = {
                     errorMessage = null
@@ -221,7 +221,7 @@ fun RegisterScreen(
                         errorMessage = "Debes aceptar los términos y condiciones"
                         return@Button
                     }
-
+                    //Llamada a Firebase :)
                     isLoading = true
                     auth.createUserWithEmailAndPassword(email.trim().lowercase(), password)
                         .addOnCompleteListener { task ->
@@ -238,6 +238,7 @@ fun RegisterScreen(
                                         onRegisterSuccess()
                                     }
                             } else {
+                                //Manejo de Errores
                                 isLoading = false
                                 errorMessage = when (task.exception) {
                                     is FirebaseAuthUserCollisionException -> "Ya existe una cuenta con este correo"
