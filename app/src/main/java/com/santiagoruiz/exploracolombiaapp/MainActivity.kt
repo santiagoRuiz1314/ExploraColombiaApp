@@ -21,9 +21,6 @@ import com.santiagoruiz.exploracolombiaapp.ui.theme.ExploraColombiaAppTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (savedInstanceState == null) {
-            Firebase.auth.signOut()
-        }
         enableEdgeToEdge()
         setContent {
             NavigationApp()

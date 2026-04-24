@@ -41,7 +41,13 @@ fun NavigationApp(){
             )
         }
         composable(route = "home"){
-            HomeScreen()
+            HomeScreen(
+                onLogout = {
+                    myNavController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

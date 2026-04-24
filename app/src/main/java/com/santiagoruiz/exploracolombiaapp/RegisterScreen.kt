@@ -32,7 +32,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.auth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.santiagoruiz.exploracolombiaapp.ui.theme.ExploraColombiaAppTheme
 
 @Composable
@@ -186,32 +192,63 @@ fun RegisterScreen(
             Button(
                 onClick = {
                     errorMessage = null
-                    when {
-                        name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank() -> {
-                            errorMessage = "Por favor completa todos los campos"
-                        }
-                        password != confirmPassword -> {
-                            errorMessage = "Las contraseñas no coinciden"
-                        }
-                        password.length < 6 -> {
-                            errorMessage = "La contraseña debe tener al menos 6 caracteres"
-                        }
-                        !acceptedTerms -> {
-                            errorMessage = "Debes aceptar los términos y condiciones"
-                        }
-                        else -> {
-                            isLoading = true
-                            auth.createUserWithEmailAndPassword(email.trim(), password)
-                                .addOnCompleteListener { task ->
-                                    isLoading = false
-                                    if (task.isSuccessful) {
-                                        onRegisterSuccess()
-                                    } else {
-                                        errorMessage = task.exception?.message ?: "Error al crear la cuenta"
-                                    }
-                                }
-                        }
+
+                    val (nameOk, nameError) = validateName(name)
+                    if (!nameOk) {
+                        errorMessage = nameError
+                        return@Button
                     }
+
+                    val (emailOk, emailError) = validateEmail(email.trim())
+                    if (!emailOk) {
+                        errorMessage = emailError
+                        return@Button
+                    }
+
+                    val (passwordOk, passwordError) = validatePassword(password)
+                    if (!passwordOk) {
+                        errorMessage = passwordError
+                        return@Button
+                    }
+
+                    val (confirmOk, confirmError) = validateConfirmPassword(password, confirmPassword)
+                    if (!confirmOk) {
+                        errorMessage = confirmError
+                        return@Button
+                    }
+
+                    if (!acceptedTerms) {
+                        errorMessage = "Debes aceptar los términos y condiciones"
+                        return@Button
+                    }
+
+                    isLoading = true
+                    auth.createUserWithEmailAndPassword(email.trim().lowercase(), password)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                val profileUpdates = userProfileChangeRequest {
+                                    displayName = name.trim()
+                                }
+                                auth.currentUser?.updateProfile(profileUpdates)
+                                    ?.addOnCompleteListener {
+                                        isLoading = false
+                                        onRegisterSuccess()
+                                    } ?: run {
+                                        isLoading = false
+                                        onRegisterSuccess()
+                                    }
+                            } else {
+                                isLoading = false
+                                errorMessage = when (task.exception) {
+                                    is FirebaseAuthUserCollisionException -> "Ya existe una cuenta con este correo"
+                                    is FirebaseAuthWeakPasswordException -> "La contraseña es muy débil"
+                                    is FirebaseAuthInvalidCredentialsException -> "El correo no es válido"
+                                    is FirebaseNetworkException -> "Sin conexión a internet. Verifica tu red"
+                                    is FirebaseTooManyRequestsException -> "Demasiados intentos. Intenta más tarde"
+                                    else -> "Error al crear la cuenta. Intenta de nuevo"
+                                }
+                            }
+                        }
                 },
                 enabled = !isLoading,
                 modifier = Modifier
