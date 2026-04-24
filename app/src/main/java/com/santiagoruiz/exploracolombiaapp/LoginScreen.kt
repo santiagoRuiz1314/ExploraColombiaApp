@@ -18,12 +18,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.FirebaseTooManyRequestsException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.auth
 import com.santiagoruiz.exploracolombiaapp.ui.theme.ExploraColombiaAppTheme
 
@@ -138,6 +144,11 @@ fun LoginScreen(
                         .clip(RoundedCornerShape(28.dp)),
                     placeholder = { Text("nombre@ejemplo.com", color = Color.Gray) },
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray) },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        capitalization = KeyboardCapitalization.None,
+                        imeAction = ImeAction.Next
+                    ),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = inputBg,
                         unfocusedContainerColor = inputBg,
@@ -197,18 +208,33 @@ fun LoginScreen(
                 Button(
                     onClick = {
                         errorMessage = null
-                        if (email.isBlank() || password.isBlank()) {
-                            errorMessage = "Por favor completa todos los campos"
+
+                        val (emailOk, emailError) = validateEmail(email.trim())
+                        if (!emailOk) {
+                            errorMessage = emailError
                             return@Button
                         }
+
+                        val (passwordOk, passwordError) = validatePassword(password)
+                        if (!passwordOk) {
+                            errorMessage = passwordError
+                            return@Button
+                        }
+
                         isLoading = true
-                        auth.signInWithEmailAndPassword(email.trim(), password)
+                        auth.signInWithEmailAndPassword(email.trim().lowercase(), password)
                             .addOnCompleteListener { task ->
                                 isLoading = false
                                 if (task.isSuccessful) {
                                     onLoginSuccess()
                                 } else {
-                                    errorMessage = task.exception?.message ?: "Error al iniciar sesión"
+                                    errorMessage = when (task.exception) {
+                                        is FirebaseAuthInvalidUserException -> "No existe una cuenta con este correo"
+                                        is FirebaseAuthInvalidCredentialsException -> "Correo o contraseña incorrectos"
+                                        is FirebaseNetworkException -> "Sin conexión a internet. Verifica tu red"
+                                        is FirebaseTooManyRequestsException -> "Demasiados intentos fallidos. Intenta más tarde"
+                                        else -> "Error al iniciar sesión. Intenta de nuevo"
+                                    }
                                 }
                             }
                     },
